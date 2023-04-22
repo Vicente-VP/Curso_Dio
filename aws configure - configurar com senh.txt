@@ -1,0 +1,75 @@
+aws configure -> configurar com senha 
+
+-Criando a tabela:
+
+aws dynamodb create-table\
+--TABLE-NAME Music\
+--attribute-definition\
+	attributeName=Artist,attributeType=S\
+	attributeName=SongTitle,attributeType=S\
+--key-schema\
+	attributeName=Artist,KeyType=HASH\
+	attributeName=SongTitle,KeyType=RANGE\
+--provisioned-throughput\
+	ReadCpacityUnits=10,WriteCapacityUnits=5
+
+-Inserir item na tabela:
+
+aws dynamodb put-item\
+	--table-name Music\
+	--item file://itemmusic.json\
+
+-Inserir multiplos itens:
+
+aws dynamodb batch-write-item\
+	--request-items file://batchmusic.json
+
+-Pesquisar item por artista:
+
+aws dynamodb query\
+	--table-name Music\
+	--key-condition-expression "Artist :artist"\
+	--expression-attribute-values '{":artist":{"S":"Iron Maiden"}}'
+
+-Criando Index global:
+
+aws dynamod update-table\
+	--table-name Music\
+	--attibute-definitions AttributeName=AlgumTitle,AttributeType=S\
+	--global-secondary-index-updatesz
+	"[{\"Create\":{\"IndexName\": \"AlbumTitle-index\",\"KetSchema\":[{\"AttributeName\":	\"AlbumTitle\",\"KeyType\":\"HASH\"}],\
+	\"ProvisionedThrougghput\":{\"ReadCapacityUnits\": 10, \"WriteCapacityUnits\": 5},	\"Projetion\":{\"ProjetionType\":\"ALL\"}}}]"
+
+
+-Pesquisar pelo index secundário baseado no tirulo do álbum:
+
+aws dynamodb query\
+	--tablename Music\
+	--index-name AlbumTitle-index\
+	--key-condition-expression "AlbumTitle = :name"\
+	--expression-attribute-values '{"name":{"S": "Fear of the Dark"}}'
+
+-criando outro index:
+
+aws dynamodb update-table\
+	--table-name Music\
+	--attribute-definitions\
+		AttributeName=Artist, AttributeType=S\
+		AttributeNAme=AlbumTitle, AttributeType=S\
+	--global-secondary-index-updates\
+		"[{\"Create\":{\"IndexName\": \"ArtistAbumTitle-index\",\"KeySchema				\":[{\"AttributeName\":\"Artist\",\"KeyType\":\"HASH\"},{\"AttributeName\":			\"AlbumTitle\",\"KeyType\":\"RANGE\"}], \"ProvisionedThroughput					\":{\"ReadCapacityUnits": 10, \"WriteCapacityUnits\":5},\"Projection				\":{\"ProjectionType\":\"ALL\"}}}]"
+
+-Pesquisa pelo index secundário baseado no nome do artista e no titulo do álbum:
+
+aws dynamodb queryz
+	--table-name Music\
+	--indexname ArtistAlbumTitle-index\
+	--key-condition-expression "Artist = :v_artist and AlbumTitle = :v_title"\
+	--expression-attriute-values '{":v_artist":{"S":"Iron Maiden"}, ":v_title":{"S":"Fear 						of the Dark"}}'
+
+-Pesquisa pelo index secundário basedo no título da música e no ano:
+
+	--table-name Music\
+	--indexname SongTitleYear-index\
+	--key-condition-expression "SongTitle= :v_song and SongYear = :v_year"\
+	--expression-attribute-values '{":v_song":{"S":"Wasting 											Love"},":v_year":{"S":"1992"}}'
